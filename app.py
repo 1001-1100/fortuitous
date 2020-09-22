@@ -7,20 +7,17 @@ import random
 app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
+randomSize = 1048576
 
-def initialize_randomness():
-    for i in range(1,31):
-        if(i < 10):
-            filename = '2020-08-0'+str(i)+'.bin'
-        else:
-            filename = '2020-08-'+str(i)+'.bin'
-        with open(filename, 'rb') as f:
-            while(byte := f.read(1)):
-                randombytes.append(byte)
-                
-randombytes = []
-initialize_randomness()
-sampleSize = len(randombytes)
+def getRandomByte():
+    i = random.randint(1,31)
+    if(i < 10):
+        filename = '2020-08-0'+str(i)+'.bin'
+    else:
+        filename = '2020-08-'+str(i)+'.bin'
+    with open(filename, 'rb') as f:
+        f.seek(random.randint(0,randomSize))
+        return f.read(1)
 
 @app.route('/integer', methods=['GET'])
 @cross_origin()
@@ -37,12 +34,12 @@ def integer():
         m = int(m)
     integers = []
     for i in range(n):
-        byte = randombytes[random.randint(0,sampleSize)]
+        byte = getRandomByte()
         byte = ord(byte)
         byte = bin(byte)[2:].rjust(8,'0')
         integer = int(byte,2) 
         while(integer >= m):
-            byte = randombytes[random.randint(0,sampleSize)]
+            byte = getRandomByte()
             byte = ord(byte)
             byte = bin(byte)[2:].rjust(8,'0')
             integer = int(byte,2) 
@@ -59,7 +56,7 @@ def bit():
         n = int(n)
     bits = []
     for i in range(n):
-        byte = randombytes[random.randint(0,sampleSize)]
+        byte = getRandomByte()
         byte = ord(byte)
         byte = bin(byte)[2:].rjust(8,'0')
         bits.append(int(byte[0]))
@@ -72,5 +69,6 @@ def index():
     return "<h1>Welcome to the Randomness API!</h1>"
 
 if __name__ == '__main__':
+
     # Threaded option to enable multiple instances for multiple user access support
     app.run(threaded=True, port=5000)
